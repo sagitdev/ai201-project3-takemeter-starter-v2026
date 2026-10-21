@@ -42,8 +42,12 @@
 <!-- Your community, and what your classifier sorts posts into. Three or four
      sentences. -->
 
-
-
+TakeMeter sorts IMDb user reviews by how the opinion is argued, not by whether
+the writer liked the film. My data is 200 reviews from 10 films across five
+genres, sampled evenly across star ratings. The classifier sorts each review
+into `critique` (backs a verdict with something specific in the film),
+`hot_take` (a verdict with nothing specific), or `experience` (mainly a
+reaction the film caused, like crying or falling asleep).
 ---
 
 ## Label Taxonomy
@@ -96,6 +100,7 @@ review is written, not whether the writer liked the film.
 1. **`critique` vs `hot_take`: blank out the names, then look at what's left.**
    Replace any actor, character, director or film title with a placeholder ("the lead", "another film"). If all that remains is an evaluation word (great, bad, flat, boring, worse, too much, dragged), it is not specific. It is specific only if it describes what the thing does or gives a reason.
    One specific sentence is enough to make the review a `critique`, however heated the rest is.
+   A description of what happens in the film (a particular scene, a character's situation) also counts as specific, even if the verdict on it is only an evaluation word.
    - "Good Actors, Good Director" → only evaluation words → `hot_take`
    - "Bad CGI, no sense of heights" → "no sense of heights" says what the CGI fails to do → `critique`
    - "A simple plot like this did not need a 2.5h movie" → a checkable fact → `critique`
@@ -120,10 +125,29 @@ I classified eight boundary reviews an AI wrote for me. I got 3 of 8 right on th
 <!-- Where you collected from, how you labelled, your counts, and three hard
      cases. -->
 
-**Where the posts came from:**
+> **Status at the unit 5 deadline:** collection is done (200 reviews in
+> `labels.csv`). Labelling is in progress: the 20 cold rows are labelled and
+> checked; the other 180 are pre-labelled by AI and waiting for my
+> review, so their `label` column is still empty. Training (Milestone 5) has not
+> run yet. I'll finish both and commit them. The two worksheets are committed
+> as they stand: `cold_20.md` holds my cold labels and re-check, and
+> `prelabel_180.md` holds the AI's unchecked pre-labels.
+
+**Where the posts came from:** IMDb user reviews, copied by hand. 20 reviews
+from each of 10 films: Obsession, Resident Evil, Fall 2: Deadpoint, Project
+Hail Mary, Spider-Man (2002), The Wandering Earth, The Shawshank Redemption,
+Life Is Beautiful, Your Name, WALL-E. For each film I took reviews evenly
+across star ratings and skipped any flagged as spoilers. The star rating is
+not in the text; each row is the review's title followed by its body.
 
 **How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
 Say so plainly — the disclosure is required, not penalised. -->
+I labelled 20 reviews cold first: two per film, no AI, no translation. 16 of my
+20 cold labels were `critique`. When I re-checked them against my own
+blank-out-the-names rule, 6 turned out to be only evaluation words and became
+`hot_take`, leaving 10 and 10. Both labels are kept in the `note` column
+(`cold: …; checked: …`). The other 180 were pre-labelled by AI using my
+definitions and rules. I am reading and correcting every one.
 
 **Counts per label:**
 
@@ -176,8 +200,6 @@ Say so plainly — the disclosure is required, not penalised. -->
 split. If a label had fewer than about 8 in test, say so — it explains a lot
 of next unit's variance. -->
 
-
-
 ---
 
 ## How I Used AI
@@ -189,19 +211,59 @@ of next unit's variance. -->
      workflow and disclosing it costs you nothing. Not disclosing it is the
      problem. -->
 
-**Moment 1**
+I used Claude (Claude Code) as a tutor throughout. These notes cover what I've
+done up to the unit 5 deadline.
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+**Moment 1: drafting the labels**
 
-**Moment 2**
+- *What I asked for:* Draft two to four labels with one-sentence definitions,
+  based on my 200 reviews and the eight distinctions I wrote down in
+  Milestone 1 (`notes.md`).
+- *What came back:* `critique`, `hot_take` and `experience`, each with a real
+  positive and negative example. It also explained why it didn't use emotional
+  intensity, and why the rating-complaint reviews didn't work as a fourth label.
+  It flagged two risks: what counts as "specific", and `experience` being thin.
+- *What I changed:* I widened `critique` to list more kinds of specific things
+  (style, the ending, a named director, another named film). I added "points to
+  nothing specific" to `experience` so it can't overlap with `critique`. I also
+  added a "more than three sentences" condition to `critique`. The AI showed me a
+  two-sentence review that would then fit no label, so I removed it. At first I
+  said that any mention of acting or effects should count as `critique`. Then I
+  saw that about 77% of reviews mention some part of the film, which would break
+  the 70% cap, so I chose to require a description or reason, not just a mention.
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+**Moment 2: stress-testing the decision rules**
 
-**Pre-labelling disclosure:**
+- *What I asked for:* I had the AI draft my decision rules. Then I asked for
+  eight made-up reviews that sit on my boundaries. I classified them myself
+  before seeing its answers.
+- *What came back:* Eight boundary reviews. Measured against my own rules, I
+  got 3 of 8 right on the first pass.
+- *What I changed:* My misses showed I was treating any name as specific
+  ("Ryan Gosling is great"). That became the blank-out-the-names step in rule 1.
+  On one review I disagreed with the AI's answer. A side remark about watching on
+  a plane with bad headphones was making it `experience`, and I argued that
+  viewing conditions aren't a reaction the film caused. That became "only
+  reactions count" in rule 2. Labelling my cold 20 later showed one more gap
+  (a described scene followed by only an evaluation word), and I added a
+  sentence to rule 1 for it.
+
+**Other AI use, disclosed plainly**
+
+- **Data formatting:** the AI turned my Word document of copied reviews into
+  `labels.csv`. It fixed reviews that were merged or split by missing or extra
+  blank lines, and removed one duplicate. I chose the review that replaced it.
+- **Translation:** the AI made a Chinese–English side-by-side copy of the
+  reviews for my own reading. It isn't part of the data, and I didn't use it for
+  the cold 20.
+
+**Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
+were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
+using my definitions and decision rules, with a one-line reason each and a ⚠️ on
+the 63 it was unsure about (`prelabel_180.md`). I am reading every one and
+keeping or correcting the label. Their `label` column in `labels.csv` stays
+empty until I've checked them. Each finished row will be marked
+`pre-labelled, checked` or `pre-labelled, corrected`.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
@@ -229,9 +291,6 @@ of next unit's variance. -->
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
-
-
-
 ---
 
 ## Run Log — Before
@@ -262,9 +321,6 @@ of next unit's variance. -->
 <!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
      direction. "7 real analysis posts were called hot_take and only 3 went the
      other way" is a direction, not just an error rate. -->
-
-
-
 ---
 
 ## Verdicts and Diagnoses
@@ -290,8 +346,6 @@ of next unit's variance. -->
      ⚠️ Use your agreement report as evidence. It is the only instrument you
      have that can tell a LABELLING problem from a MODEL problem, and this
      section is graded on whether you used it that way. -->
-
-
 
 ---
 
@@ -345,8 +399,6 @@ of next unit's variance. -->
 
 **What the pattern in my disagreements tells me:**
 
-
-
 ---
 
 ## The Improvement
@@ -370,21 +422,15 @@ of next unit's variance. -->
 <!-- If it didn't, say so. Relabelling that didn't help is a genuinely
      interesting result and earns full credit. -->
 
-
-
 ---
 
 ## What's Still Broken
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
-
-
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
-
-
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
