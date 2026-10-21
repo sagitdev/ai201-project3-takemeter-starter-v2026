@@ -54,35 +54,64 @@
      The decision rule is worth a point on its own and it's the thing most
      people leave out. Every taxonomy has a hardest boundary. Name yours. -->
 
-### `label_one`
+Each label holds both positive and negative reviews, so it describes how a
+review is written, not whether the writer liked the film.
 
-**Definition:**
+### `critique`
 
-**Example 1:**
->
+**Definition:** Backs a judgement of the film with something specific in it(an actor, character, director, scene, plot point, the ending, the style, another named film, or a filming or technical choice) and says what that thing is like or why, not just that it was good or bad.
 
-**Example 2:**
->
+**Example 1:** *(Resident Evil, positive)*
+> As a Resident Evil games player since RE1, I approve this movie 10/10. … The tunnel scene in particular was brilliant. The camera angles are brilliantly game-like, and the environment lighting and score are perfectly on point.
 
-### `label_two`
+**Example 2:** *(Obsession, negative)*
+> I don't get the OBSESSION! Honestly I don't understand the hype. I felt the movie was repitive and predictable, with very little risk taken. The color was desaturated to the point it felt like a mistake. … It leaned way too hard on the in and out of reality displayed by Nikki, which was uninteresting and overdone. You could literally time a jump scare. …
 
-**Definition:**
+### `hot_take`
 
-**Example 1:**
->
+**Definition:** States a verdict on the film without pointing to anything specific in it.
 
-**Example 2:**
->
+**Example 1:** *(The Shawshank Redemption, positive)*
+> Movie worth watching. A very good movie. Worth watching.brilliant movie. One of the most memorable movies that you won't forget about.
+
+**Example 2:** *(WALL-E, negative)*
+> …。 Pretty dull and boring. And heavily overrated. I don't see what's so good about it.
+
+### `experience`
+
+**Definition:** Mainly reports a reaction the film caused in the writer, or in the people they watched with (crying, falling asleep, walking out), rather than judging the film, and points to nothing specific in it.
+
+**Example 1:** *(Life Is Beautiful, positive)*
+> Life is really beautiful. Just yesterday I saw the movie, basically am not a happy person. After I saw this movie I have learned to be happy with what I have. I saw his Oscar award videos before I saw the move. Then I understood. Thanks Robert
+
+**Example 2:** *(Life Is Beautiful, negative)*
+> Very disappointing. I watched this at home, and I found it tedious. I turned it off after 1/2 hour because I found it boring and Benigni's humor not funny. How this movie got selected for Best Picture nomination baffles me. Perhaps the story picked up after a while, but I wasn't around to see it!
 
 ### The hardest boundary
 
-**Which two labels:**
+**Which two labels:** `critique` and `hot_take`. Most reviews mention some part of the film (the acting, the story, the CGI). The hard question is when a mention counts as specific.
 
 **The decision rule I used every time:**
-<!-- e.g. "If the post names a specific checkable fact, it's `analysis`, even
-     if the tone is heated." -->
 
+1. **`critique` vs `hot_take`: blank out the names, then look at what's left.**
+   Replace any actor, character, director or film title with a placeholder ("the lead", "another film"). If all that remains is an evaluation word (great, bad, flat, boring, worse, too much, dragged), it is not specific. It is specific only if it describes what the thing does or gives a reason.
+   One specific sentence is enough to make the review a `critique`, however heated the rest is.
+   - "Good Actors, Good Director" → only evaluation words → `hot_take`
+   - "Bad CGI, no sense of heights" → "no sense of heights" says what the CGI fails to do → `critique`
+   - "A simple plot like this did not need a 2.5h movie" → a checkable fact → `critique`
 
+2. **`experience` vs `hot_take`: only reactions count.** 
+   A reaction the film caused counts (crying, laughing, falling asleep, walking out, turning it
+   off). Where, how or with whom they watched (on a plane, at home, with my wife) is context and does not count. If a review has both a reaction and a verdict, I pick whichever takes up more of it.
+
+3. **Order: rule 1 first.** 
+   If it finds anything specific, the label is `critique` and I stop. 
+   Only if it doesn't do I use rule 2.
+
+Complaints about the rating or the hype ("Overrated", "Really? 10/10?") follow the same rules. I considered a fourth label for them: about 60 of my 200 reviews comment on the rating. It wouldn't hold, because a rating complaint is a topic, not a way of writing. "Overrated … How the wardens didn't notice he was chipping through the wall everyday to escape is beyond me" argues from a plot detail, while "Dont get why is this greatest here, lol ok" argues from nothing. They needed to be `critique` and `hot_take`, not one shared label.
+
+**How the rule was tested:** 
+I classified eight boundary reviews an AI wrote for me. I got 3 of 8 right on the first pass. The misses showed two leaks. I was counting a name as specific ("Ryan Gosling is great"), which led to the blank-out-the-names step. A single side remark about the viewing conditions ("watched this on a plane with terrible headphones") was turning a review into `experience`, which led to "only reactions count".
 
 ---
 
