@@ -48,6 +48,7 @@ genres, sampled evenly across star ratings. The classifier sorts each review
 into `critique` (backs a verdict with something specific in the film),
 `hot_take` (a verdict with nothing specific), or `experience` (mainly a
 reaction the film caused, like crying or falling asleep).
+
 ---
 
 ## Label Taxonomy
@@ -101,13 +102,14 @@ review is written, not whether the writer liked the film.
    Replace any actor, character, director or film title with a placeholder ("the lead", "another film"). If all that remains is an evaluation word (great, bad, flat, boring, worse, too much, dragged), it is not specific. It is specific only if it describes what the thing does or gives a reason.
    One specific sentence is enough to make the review a `critique`, however heated the rest is.
    A description of what happens in the film (a particular scene, a character's situation) also counts as specific, even if the verdict on it is only an evaluation word.
+   A reason counts only if the reason itself points to something in the film. Another evaluation, a comparison that doesn't say what's alike, or a claim about the producers or the audience doesn't count.
    - "Good Actors, Good Director" → only evaluation words → `hot_take`
    - "Bad CGI, no sense of heights" → "no sense of heights" says what the CGI fails to do → `critique`
    - "A simple plot like this did not need a 2.5h movie" → a checkable fact → `critique`
 
 2. **`experience` vs `hot_take`: only reactions count.** 
    A reaction the film caused counts (crying, laughing, falling asleep, walking out, turning it
-   off). Where, how or with whom they watched (on a plane, at home, with my wife) is context and does not count. If a review has both a reaction and a verdict, I pick whichever takes up more of it.
+   off). Where, how or with whom they watched (on a plane, at home, with my wife) is context and does not count. A lasting change in the writer caused by the film ("I have learned to be happy with what I have") also counts as a reaction. If a review has both a reaction and a verdict, I pick whichever takes up more of it.
 
 3. **Order: rule 1 first.** 
    If it finds anything specific, the label is `critique` and I stop. 
@@ -118,6 +120,8 @@ Complaints about the rating or the hype ("Overrated", "Really? 10/10?") follow t
 **How the rule was tested:** 
 I classified eight boundary reviews an AI wrote for me. I got 3 of 8 right on the first pass. The misses showed two leaks. I was counting a name as specific ("Ryan Gosling is great"), which led to the blank-out-the-names step. A single side remark about the viewing conditions ("watched this on a plane with terrible headphones") was turning a review into `experience`, which led to "only reactions count".
 
+Labelling the real 200 found three more gaps, and each became a sentence above. The first was a scene described with only an evaluation word ("It was touching when the multilingual said goodbye to the solar system"). The second was a reason that is itself only an evaluation or an outside comparison ("as designed and engineered as N-SYNC", "another 'Alice' situation"). The third was a lasting change rather than an in-the-moment reaction ("I have learned to be happy with what I have").
+
 ---
 
 ## The Dataset
@@ -125,13 +129,12 @@ I classified eight boundary reviews an AI wrote for me. I got 3 of 8 right on th
 <!-- Where you collected from, how you labelled, your counts, and three hard
      cases. -->
 
-> **Status at the unit 5 deadline:** collection is done (200 reviews in
-> `labels.csv`). Labelling is in progress: the 20 cold rows are labelled and
-> checked; the other 180 are pre-labelled by AI and waiting for my
-> review, so their `label` column is still empty. Training (Milestone 5) has not
-> run yet. I'll finish both and commit them. The two worksheets are committed
-> as they stand: `cold_20.md` holds my cold labels and re-check, and
-> `prelabel_180.md` holds the AI's unchecked pre-labels.
+> **Status:** At the unit 5 deadline, collection was done and only the 20 cold
+> rows were labelled. I finished labelling all 200 afterwards. Training
+> (Milestone 5) has not run yet. The worksheets are committed:
+> `cold_20.md` holds my cold labels and re-check, `prelabel_180.md` holds the
+> AI's pre-labels with my check on each, and `disagreements_20.md` holds the
+> 20 where I disagreed with the AI and how each was settled.
 
 **Where the posts came from:** IMDb user reviews, copied by hand. 20 reviews
 from each of 10 films: Obsession, Resident Evil, Fall 2: Deadpoint, Project
@@ -147,42 +150,78 @@ I labelled 20 reviews cold first: two per film, no AI, no translation. 16 of my
 blank-out-the-names rule, 6 turned out to be only evaluation words and became
 `hot_take`, leaving 10 and 10. Both labels are kept in the `note` column
 (`cold: …; checked: …`). The other 180 were pre-labelled by AI using my
-definitions and rules. I am reading and correcting every one.
+definitions and rules. I read every one, with the AI's Chinese translation
+beside the English to go faster, and went back to the English whenever a
+review was close. I agreed with 160. I disagreed with 20, and for those I
+compared my reason against my own rules and my earlier labels. 5 ended up
+changed from the AI's label (`pre-labelled, corrected` in the `note` column).
+For the other 15, re-checking showed my objection was counting an evaluation
+word or a bare comparison as specific, so the AI's label stayed
+(`pre-labelled, checked`).
 
 **Counts per label:**
 
 | Label | Count | Share |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| **Total** |  | 100% |
+| `critique` | 94 | 47% |
+| `hot_take` | 95 | 47.5% |
+| `experience` | 11 | 5.5% |
+| **Total** | 200 | 100% |
 
-**Three hard cases**
+No label is above the 70% cap, and `critique` and `hot_take` are close to
+even. They're also spread evenly across films: each film has between 6 and 13
+of each, so the model can't learn a label from the film's name. `experience`
+is the problem. At 11 rows it misses my own criterion 4 (at least 30), and the
+test split will hold only one or two, so its F1 next unit will be close to
+meaningless. I'm keeping it as a third label rather than merging it into
+`hot_take`, and reporting the miss instead of hiding it. The reason it's thin
+is a finding about IMDb reviews: almost everyone writes to judge the film, and
+under my rules a review counts as `experience` only if the reaction is the
+main thing and nothing in it is specific. Collecting more `experience` reviews
+is the obvious fix to try in unit 6.
+
+**Hard cases**
 
 <!-- Any post that made you pause: what it was, which two labels it could have
      been, and what you chose. These are worth more than the easy 190. -->
 
-**1.**
-> *The post:*
->
-> *Could have been:*
->
-> *I chose, because:*
+Five, not three. Each one either changed a rule or tested one. Numbers are row
+numbers in `labels.csv`.
 
-**2.**
-> *The post:*
+**1. A list of evaluation words (#11, Obsession, one of my cold 20)**
+> *The post:* "OVERRATED. This movie isn't bad, I love horror and saw this in theaters asap. It's a decent movie but to call this one of the greatest horror movies in recent time is insane. People saying that this movie left them jaw dropped and that it's soooo good is a crazy take. This movie has a great Jumpscare, a decent plot, okay acting with the main character having great acting, the ending was decent, overall just a decent movie I'd rate it no higher than a 6.5 if you think this is a 10 then idk."
 >
-> *Could have been:*
+> *Could have been:* `critique` or `hot_take`
 >
-> *I chose, because:*
+> *I chose, because:* `hot_take`. Cold, I called it `critique` because it names five parts of the film. When I blanked out the names, every part was followed only by an evaluation word: great, decent, okay, great, decent. Naming more parts doesn't make a review more specific. This was one of the six cold labels that changed on re-check, and it's why my cold 20 started at 80% `critique`.
 
-**3.**
-> *The post:*
+**2. A lasting change, not an in-the-moment reaction (#144, Life Is Beautiful)**
+> *The post:* "Life is really beautiful. Just yesterday I saw the movie, basically am not a happy person. After I saw this movie I have learned to be happy with what I have. I saw his Oscar award videos before I saw the move. Then I understood. Thanks Robert"
 >
-> *Could have been:*
+> *Could have been:* `experience` or `hot_take`
 >
-> *I chose, because:*
+> *I chose, because:* `experience`. Every reaction listed in rule 2 happens while watching: crying, laughing, falling asleep, walking out. This one is a change that lasted after the film: "I have learned to be happy with what I have." Nothing in it is about the film itself, and the change is the whole point of the review. I decided a lasting change caused by the film counts as a reaction and added that sentence to rule 2.
+
+**3. A reason that is only a comparison (#93, Spider-Man)**
+> *The post:* "Wait for it to come out on video. First the good: Great effects, good fight scenes, fantastic acting, direction, and cinematography. Now the bad: Formula, formula, formula. This movie was as designed and engineered as N-SYNC. The producers didn't even try to disguise their quest for money with an interesting plot. And the ugly: The smarmy love-story. It made me want to wretch. How the actors kept straight faces while reciting some of the corniest and sappiest lines I've ever heard is worthy of an Academy Award. I haven't seen anything so maudlin since the Sammy Maudlin show."
+>
+> *Could have been:* `critique` or `hot_take`
+>
+> *I chose, because:* `hot_take`. I first read "as designed and engineered as N-SYNC" as an argument, because it names a clear comparison. But N-SYNC is a boy band, and the comparison only says "formulaic" in another way. It never says which parts of the film are formula. "The producers didn't even try" is about the producers, not the film. "Smarmy", "corniest" and "sappiest" are evaluation words. This is where I added to rule 1 that a reason has to point to something in the film itself. "It made me want to wretch" is a reaction, but most of the review is verdict, so rule 2 still gives `hot_take`.
+
+**4. Short, but specific (#76, Project Hail Mary)**
+> *The post:* "Could have done better. I had not read the book so I went in with an open mind. I found the movie too long and a bit silly. They were seemingly trying to convey the complexity of the human experience but it just came up short. As with many films today they just had too many endings and it dragged along. The score was mismatched, loud and grating. The could have done better."
+>
+> *Could have been:* `critique` or `hot_take`
+>
+> *I chose, because:* `critique`. Most of it is evaluation ("too long", "a bit silly", "came up short"). I hesitated because the reasons are so brief. But "too many endings" is something you could check by watching: the film has several closing sequences. "Loud" says what the score is like, not just that it's bad. Rule 1 says one specific sentence is enough, so length doesn't decide it. The AI had pre-labelled this one `hot_take`, and I changed it.
+
+**5. Reaction or verdict, roughly half and half (#3, Obsession)**
+> *The post:* "Best horror I've seen in a long time. This movie had so much range, you'd be scared shitless and then laugh the next second. Also I had my biggest jump scare ever which I never really fall for, but I literally flew back in my seat and rocked the whole chair lmao. Major respect to the girl playing Nikki she was phenomenal, and props to the crew and actors for making such a quality movie with a low budget. This really is the best movie I've seen in the past 3 years and I'm usually reluctant to ever say something like that but I'm so impressed, this is a must see!"
+>
+> *Could have been:* `experience` or `hot_take`
+>
+> *I chose, because:* `experience`. Nothing passes rule 1: "phenomenal" and "quality movie" are evaluation words. So it comes down to rule 2's "whichever takes up more of it". Two sentences are reactions: being scared and then laughing, and flying back in the seat and rocking the chair. Three are verdict. That's close to even. I chose `experience` because the jump scare is the only concrete thing that happens in the review, and the praise around it reads as the result of that reaction. The AI had said `hot_take`. This is the closest call in my data, and it shows "whichever takes up more" is hard to apply when the two halves are about the same length.
 
 ---
 
@@ -254,16 +293,19 @@ done up to the unit 5 deadline.
   `labels.csv`. It fixed reviews that were merged or split by missing or extra
   blank lines, and removed one duplicate. I chose the review that replaced it.
 - **Translation:** the AI made a Chinese–English side-by-side copy of the
-  reviews for my own reading. It isn't part of the data, and I didn't use it for
-  the cold 20.
+  reviews for my own reading. It isn't part of the data. I didn't use it for
+  the cold 20. I did read it beside the English when checking the other 180.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
 using my definitions and decision rules, with a one-line reason each and a ⚠️ on
-the 63 it was unsure about (`prelabel_180.md`). I am reading every one and
-keeping or correcting the label. Their `label` column in `labels.csv` stays
-empty until I've checked them. Each finished row will be marked
-`pre-labelled, checked` or `pre-labelled, corrected`.
+the 63 it was unsure about (`prelabel_180.md`). I read every one and marked
+it agree or disagree. I disagreed on 20. I settled each of those with the AI
+by testing my reason against my own rules (`disagreements_20.md`). On 6 I
+was undecided and took the AI's reading once it showed that my reason was
+itself only an evaluation or a bare comparison. Final result: 175 kept as
+pre-labelled (`pre-labelled, checked`) and 5 changed (`pre-labelled,
+corrected`).
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
