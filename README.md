@@ -130,8 +130,8 @@ Labelling the real 200 found three more gaps, and each became a sentence above. 
      cases. -->
 
 > **Status:** At the unit 5 deadline, collection was done and only the 20 cold
-> rows were labelled. I finished labelling all 200 afterwards. Training
-> (Milestone 5) has not run yet. The worksheets are committed:
+> rows were labelled. I finished labelling all 200 afterwards, then ran the
+> training (Milestone 5, see The Training Run). The worksheets are committed:
 > `cold_20.md` holds my cold labels and re-check, `prelabel_180.md` holds the
 > AI's pre-labels with my check on each, and `disagreements_20.md` holds the
 > 20 where I disagreed with the AI and how each was settled.
@@ -229,15 +229,34 @@ numbers in `labels.csv`.
 
 <!-- Your starting model, your settings, and anything you changed and why. -->
 
-**Base model:**
+**Base model:** `distilbert-base-uncased`
 
-**Settings:** <!-- epochs, learning rate, batch size, seed -->
+**Settings:** 3 epochs, learning rate 2e-5, batch size 16, seed 42, `MAX_LENGTH` 256. Trained on `mps` (torch 2.2.2). The notebook calls it "Apple Silicon GPU", but my Mac is an Intel Mac, so this is its AMD GPU running through Apple's Metal. Training took about 3 minutes.
 
 **Anything I changed from the defaults, and why:**
+
+*`MAX_LENGTH` 128 → 256.* I counted tokens in all 200 reviews: the median is 95 and the longest is 229. At 128, 42 reviews would be cut off, and 29 of them are `critique`. A critique often gives its specific reason after an opening verdict ("Great movie! … the ending works because …"), so cutting the end can leave only the verdict and teach the model that a `critique` looks like a `hot_take`. At 256 no review is cut. The cost is slower training, which doesn't matter at 139 training rows.
+
+*Environment.* My machine is an Intel Mac. The newest torch with an Intel Mac wheel is 2.2.2, and it only works with NumPy 1.x, but `pip install -r requirements.txt` gave me NumPy 2.5.4. Training failed with `RuntimeError: Numpy is not available`. I changed three package versions inside `.venv` and did not edit `requirements.txt`:
+
+- `numpy<2` (got 1.26.4), so torch 2.2.2 can use it.
+- `scipy<1.14` (got 1.13.1), because SciPy 1.18.1 needs NumPy 2.
+- `pyarrow==22.0.0`, because pyarrow 26.0.0 (used by `datasets`) needs NumPy 2 and failed with `ImportError: pyarrow requires NumPy 2.0 or newer, found 1.26.4`. I tested 22.0.0 with NumPy 1.26.4 before installing it.
+
+None of these change how the model trains. They only make the libraries load.
 
 **Split sizes:** <!-- train / val / test, and per-label counts in the test
 split. If a label had fewer than about 8 in test, say so — it explains a lot
 of next unit's variance. -->
+
+| | train | val | test |
+|---|---|---|---|
+| critique | 66 | 14 | 14 |
+| hot_take | 66 | 15 | 14 |
+| experience | 7 | 2 | 2 |
+| **total** | **139** | **31** | **30** |
+
+`experience` has only **2** reviews in the test split, far fewer than 8. Its F1 can only be 0, about 0.5 or 1.0, so it will jump between seeds. The model also only had 7 `experience` reviews to learn from. On the seed-42 run it got `experience` F1 0.000: it called both test `experience` reviews `hot_take`.
 
 ---
 
@@ -250,8 +269,8 @@ of next unit's variance. -->
      workflow and disclosing it costs you nothing. Not disclosing it is the
      problem. -->
 
-I used Claude (Claude Code) as a tutor throughout. These notes cover what I've
-done up to the unit 5 deadline.
+I used Claude (Claude Code) as a tutor throughout. These notes cover all of
+unit 5.
 
 **Moment 1: drafting the labels**
 
@@ -289,12 +308,21 @@ done up to the unit 5 deadline.
 
 **Other AI use, disclosed plainly**
 
+- **Training setup (Milestone 5):** the AI found why the libraries wouldn't
+  load (torch 2.2.2 on my Intel Mac needs NumPy 1.x, and SciPy and pyarrow
+  needed NumPy 2). It tested pyarrow 22.0.0 against NumPy 1.26.4 in a separate
+  folder before I installed it. I ran the installs. It also counted the tokens
+  in my 200 reviews and recommended `MAX_LENGTH` 256. I accepted that. I ran
+  the notebook myself.
+- **Writing this README:** the AI wrote most of the text from my decisions and
+  our conversation, including the hard cases and the Training Run section. I
+  read it and asked for changes where it didn't match what I did.
 - **Data formatting:** the AI turned my Word document of copied reviews into
   `labels.csv`. It fixed reviews that were merged or split by missing or extra
   blank lines, and removed one duplicate. I chose the review that replaced it.
 - **Translation:** the AI made a Chinese–English side-by-side copy of the
-  reviews for my own reading. It isn't part of the data. I didn't use it for
-  the cold 20. I did read it beside the English when checking the other 180.
+  reviews for improving my own reading efficiency. It isn't part of the data. 
+  I didn't use it for the cold 20. I did read it beside the English when checking the other 180.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
