@@ -352,10 +352,26 @@ corrected`).
 
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.433 | 0.567 | +0.133 |
+| Macro F1 | 0.287 | 0.388 | +0.101 |
+| F1 — `critique` | 0.348 | 0.645 | +0.297 |
+| F1 — `experience` | 0.000 | 0.000 | +0.000 |
+| F1 — `hot_take` | 0.514 | 0.519 | +0.004 |
+
+Both columns are on the same 30 held-out reviews (`test_split.csv`, seed 42).
+The baseline is `facebook/bart-large-mnli` zero-shot, prompted with my
+definitions from `label_definitions.txt` (`baseline_results.json`).
+
+**What my definitions were worth:** the same baseline with bare label names
+only (`baseline_bare_names_results.json`):
+
+| Measure | Bare names | With my definitions | Difference |
+|---|---|---|---|
+| Overall accuracy | 0.233 | 0.433 | +0.200 |
+| Macro F1 | 0.219 | 0.287 | +0.068 |
+| F1 — `critique` | 0.333 | 0.348 | +0.015 |
+| F1 — `experience` | 0.190 | 0.000 | −0.190 |
+| F1 — `hot_take` | 0.133 | 0.514 | +0.381 |
 
 **What I predicted before I looked:**
 <!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
@@ -382,6 +398,13 @@ baseline.*
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
+
+Fine-tuning added something real, but almost all of it is on critique. The +0.13 accuracy gap is 4 more reviews right out of 30, and it comes from critique F1 rising from 0.35 to 0.65. The baseline caught only 4 of 14 critique reviews and called 21 of 30 reviews hot_take. My prediction had that direction backwards. I expected the baseline to over-call critique because most reviews name an actor or the plot. Instead, it seems to read any judgement as a verdict, and it can’t check the second half of my definition (“says what that thing is like or why”). That second half is what 200 labelled examples taught the trained model.
+
+On hot_take, fine-tuning added nothing (0.519 vs 0.514). On this split, my trained model is no better at it than a general model reading a one-line definition. On experience, neither model got either of the 2 test reviews, so this split leaves that label untested.
+
+My definitions were worth 0.20 accuracy on their own (0.233 with bare names, 0.433 with definitions). With bare names, the baseline was worse than chance, mostly because it called 19 of 30 reviews experience. All of this comes from one seed and 30 reviews, so Milestone 2’s three seeds will show whether the gap holds.
+
 ---
 
 ## Run Log — Before
