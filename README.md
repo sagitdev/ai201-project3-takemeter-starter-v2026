@@ -314,18 +314,12 @@ unit 5.
   folder before I installed it. I ran the installs. It also counted the tokens
   in my 200 reviews and recommended `MAX_LENGTH` 256. I accepted that. I ran
   the notebook myself.
-- **Writing this README:** the AI wrote most of the text from my decisions and
-  our conversation, including the hard cases and the Training Run section. I
-  read it and asked for changes where it didn't match what I did.
 - **Data formatting:** the AI turned my Word document of copied reviews into
   `labels.csv`. It fixed reviews that were merged or split by missing or extra
   blank lines, and removed one duplicate. I chose the review that replaced it.
 - **Translation:** the AI made a Chinese–English side-by-side copy of the
   reviews for improving my own reading efficiency. It isn't part of the data. 
   I didn't use it for the cold 20. I did read it beside the English when checking the other 180.
-- **Baseline analysis (unit 6, Milestone 1):** the AI ran the baseline
-  with and without my definitions, then drafted "What the gap actually
-  means" from the results. I checked it against the numbers and kept it.
 - **Three-seed run (unit 6, Milestone 2):** I ran notebook sections 1–7
   myself. The AI read the per-seed confusion matrices from
   `results_three_seeds_before.json`, filled in the run log numbers (I left
@@ -507,13 +501,69 @@ seeds, and the model never predicted `experience` once.
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.65 on all three seeds | MISSED | Only seed 7 cleared it (0.833). Seed 42 (0.567) and seed 2024 (0.500) did not. |
+| 2 | Per-label F1 | `critique` ≥ 0.60, `hot_take` ≥ 0.60, `experience` ≥ 0.40 on all three seeds | MISSED | `experience` was 0.000 on every seed. `hot_take` also missed on seed 42 (0.519), and `critique` on seed 2024 (0.133). Only seed 7 met both of the big labels. |
+| 3 | Confidence | most-sure third ≥ 0.20 more accurate than least-sure third, on all three seeds | MISSED | Seeds 7 and 2024 gave +0.30, but seed 42 gave −0.10: the confident third did worse than the unsure third. |
+| 4 | Balance | biggest label ≤ 55% and `experience` ≥ 30 rows | MISSED | The first half holds (`hot_take` is 95 of 200, 47.5%). The second half doesn't: `experience` has 11 rows. |
+| 5 | Agreement with the staff set | ≥ 0.75 (23 of 30) | MET | 30 of 30. |
+
+I am not revising any criterion. All five could be measured and gave a clear
+verdict. The `experience` F1 in criterion 2 is computed on only 2 test reviews,
+which makes it noisy, but it is still a number, and it was 0 because the model
+never predicted `experience` at all. Loosening it would be lowering a target I
+missed, not fixing a broken one.
 
 **Diagnoses**
+
+The four misses come from two causes. Criteria 2 (`experience`) and 4 share
+one; criteria 1, 3 and the `critique`/`hot_take` part of 2 share the other.
+
+*Cause A: too few `experience` examples (criterion 4, and `experience` in
+criterion 2).* `labels.csv` has 11 `experience` rows. That leaves about 8 for
+training and 2 for each test split. The model never predicted `experience` on
+any seed: in all three confusion matrices both `experience` reviews went to
+`hot_take`. This is a data problem, not a model problem, and it is one I
+flagged when I wrote criterion 4. Under my rule, `experience` needs a reaction
+*and* nothing specific, and most reviews that describe a reaction also name
+something in the film, which makes them `critique`. The baseline also scored
+0 on `experience` with my definitions, so the definition alone can't make up
+for the missing examples.
+
+*Cause B: the model barely learned the `critique`/`hot_take` boundary, so the
+split decides the score (criterion 1, criterion 3, and the `critique` and
+`hot_take` parts of criterion 2).*
+
+- **The spread is too wide to be a measurement.** Accuracy moved 0.333 across
+  seeds. Seed 7 got 25 of 30 right; seed 2024 called 29 of 30 reviews
+  `hot_take`.
+- **The model is close to guessing the label mix.** Final eval loss was 0.87–0.89
+  on every seed, and the loss of a model that only knows the label proportions
+  in `labels.csv` is about 0.87. The model's average confidence was about 0.47
+  whether it was right or wrong (0.467 vs 0.468 on seed 42). A model this
+  unsure tips one way or the other on small differences in the training split,
+  which matches the matrices: seed 42 leans `critique`, seed 2024 leans
+  `hot_take`.
+- **Criterion 3 fails for the same reason.** When every confidence is about
+  0.47, sorting into thirds sorts on noise. Each third is 10 reviews, so one
+  review moves a third's accuracy by 0.10. Even the +0.30 on seeds 7 and 2024
+  sits on a right-vs-wrong confidence difference of only 0.01, so I don't read
+  those two as the model's confidence meaning something.
+- **It is probably not my labelling.** My agreement check was 30 of 30 under
+  the staff rules, including all 7 posts staff marked borderline. That is the
+  only evidence I have that separates a labelling problem from a model
+  problem, and it points away from "I applied the boundary two ways." It
+  doesn't fully rule it out: the staff rules test an explicit fact, which is
+  easier than my "says what that thing is like or why", and 180 of my 200
+  were AI pre-labels I checked rather than labelled cold.
+- **The boundary is also genuinely hard.** The zero-shot baseline failed on
+  the same pair, calling 21 of 30 reviews `hot_take`. But seed 7 reached
+  `critique` F1 0.897 and `hot_take` F1 0.828, so the boundary can be learned
+  from these labels on some splits.
+- **What I think the cause is.** With 139 training reviews and a batch size
+  of 16, 3 epochs is only about 27 training steps at learning rate 2e-5. That
+  looks like too little training to move the model far from the label
+  proportions. This is the one place my diagnosis points at a training
+  setting, not at the labels.
 
 <!-- For each miss: the cause, and how you know. The four common causes are:
      too few examples for a label, a boundary you applied inconsistently, a
