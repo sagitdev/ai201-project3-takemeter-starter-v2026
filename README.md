@@ -323,6 +323,9 @@ unit 5.
 - **Translation:** the AI made a Chinese–English side-by-side copy of the
   reviews for improving my own reading efficiency. It isn't part of the data. 
   I didn't use it for the cold 20. I did read it beside the English when checking the other 180.
+- **Baseline prediction (unit 6, Milestone 1):** the AI drafted three
+  candidate predictions from my unit 5 results, each with a Chinese
+  explanation. I read them, agreed with all three, and kept them as written.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
@@ -357,6 +360,24 @@ corrected`).
 **What I predicted before I looked:**
 <!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
      prediction made afterwards isn't one. -->
+
+*Written after seeing my trained results from unit 5, but before running the
+baseline.*
+
+- I predict the trained model will beat the baseline on overall accuracy by
+  about 10 points, because the baseline has never seen a single labelled
+  review and will probably land near the 0.47 you'd get by always guessing
+  `critique`.
+- I expect the biggest gap on the `critique` vs `hot_take` boundary: almost
+  every review names an actor or the plot somewhere, so a zero-shot model
+  reading my definitions will likely call most reviews `critique`, while the
+  trained model learned from 200 examples that naming something isn't enough
+  unless the review says what it is like or why.
+- On `experience` the baseline might actually win, because my definition lists
+  concrete reactions like crying, falling asleep or walking out that a general
+  model can match directly, while my trained model saw too few `experience`
+  examples and scored 0 F1 — though with only 2 `experience` reviews in the
+  test split, neither number will mean much.
 
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
