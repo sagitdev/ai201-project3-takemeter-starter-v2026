@@ -652,7 +652,29 @@ here is not proof that those 200 are as consistent.
 
 **What I changed:**
 
+One training setting: `EPOCHS` from 3 to 10. Everything else is unchanged:
+the same `labels.csv`, the same taxonomy and criteria, the same three seeds
+(42, 7, 2024, so the same splits), learning rate 2e-5, batch 16,
+`MAX_LENGTH` 256, and the same device. The after-run is saved as
+`results_three_seeds_after.json` (`RUN_LABEL = "after"`).
+
 **Which diagnosis pointed at it:**
+
+Cause B in Verdicts and Diagnoses. With 139 training reviews and batch 16, 3
+epochs is about 27 training steps. After those steps, eval loss (0.87–0.89)
+was still at the level of a model that only knows the label proportions
+(about 0.87), and confidence was about 0.47 whether the model was right or
+wrong. My agreement check (30 of 30) points away from inconsistent labelling,
+so I picked the training setting over relabelling. 10 epochs is about 90
+steps, a little over three times as many.
+
+What I expect, written before the after-run: if under-training is the cause,
+eval loss should drop clearly below 0.87, accuracy should spread less than
+0.333 across the seeds, and the `critique`/`hot_take` F1s should be steadier.
+I don't expect this to fix `experience` (cause A). With about 8 training
+examples, more epochs can't teach it, so criteria 2 and 4 should still miss.
+More epochs on 139 reviews could also overfit, and that would show up as
+validation accuracy falling in the later epochs.
 
 ### Run Log — After
 
