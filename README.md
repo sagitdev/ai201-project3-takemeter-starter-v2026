@@ -331,6 +331,13 @@ unit 5.
   `results_three_seeds_before.json`, filled in the run log numbers (I left
   the Verdict column for Milestone 4), and drafted the biggest-confusion
   paragraph. I checked it against the matrices and kept it.
+- **Staff set (unit 6, Milestone 3):** the AI made a Chinese–English copy of
+  `data/staff_taxonomy.md` and of the 30 posts, in a shuffled order with no
+  label hints. I chose all 30 labels myself and wrote down which rule I used
+  for each. The AI copied my labels from that file into `my_staff_labels.csv`
+  and converted the staff labels from `.xlsx` to `data/staff_labels.csv`
+  without reading them. After `agreement.py` reported 30/30, it compared my
+  rule notes with the staff `why` column and drafted the Agreement Report.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
@@ -527,7 +534,12 @@ seeds, and the model never predicted `experience` once.
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** 30 / 30 = 100% (`agreement_results.json`)
+
+I labelled all 30 in `my_staff_labels.csv` under `data/staff_taxonomy.md`
+before I opened `data/staff_labels.csv`. I read the posts in a shuffled order,
+with a Chinese translation beside the English, and wrote down which rule I used
+for each one.
 
 <!-- Nobody grades this number. A 60% who argues every disagreement from the
      stated rules beats a 95% who wrote "staff was right" nine times. Several
@@ -549,25 +561,40 @@ seeds, and the model never predicted `experience` once.
      written rule two different ways on 30 posts, that is direct evidence about
      what you did across your own 200. -->
 
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+None. I matched staff on every post, so there is nothing to adjudicate and
+nothing to sort into piles (a), (b) or (c).
 
-**2.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+**Was the set easy, or is the rule tight?** Some of both.
+
+- *Part of it is easy.* In `staff_posts.csv` the posts are grouped by label in
+  blocks of ten, and staff marked only 7 of the 30 as borderline. The other 23
+  are textbook cases, such as "Heart rate zones are astrology for runners."
+- *The hard ones still matched.* I agreed on all 7 borderline posts. These
+  include `sp_014`, the canonical rule-1 case: the 3% is decoration on a
+  conclusion already reached. They also include `sp_005` and `sp_010`, where
+  a hedged or half-hot-take post still rests on a checkable number. I read the
+  staff rules as tight because each one asks a single test question: does the
+  fact carry the argument, is it about the writer or the world, is there a
+  load-bearing fact.
+- *Same labels, not always the same reasoning.* On two borderline posts, the
+  rule I noted was not the one staff used. On `sp_019` ("Nobody actually
+  enjoys the long run…") I used rule 1 (no fact, so not `analysis`). Staff
+  used rule 2 (a general claim, not the writer's own experience). On `sp_028`
+  ("Third DNF this year…") I used rule 2. Staff used rule 3 (a countable fact
+  that nothing is argued from). Both pairs land on the same label, but a
+  100% rate hides that we got there by different routes.
 
 **What the pattern in my disagreements tells me:**
+
+With no disagreements, this check is evidence that I can apply a written
+boundary rule consistently. It makes "I labelled my own 200 inconsistently"
+less likely as the main cause of my model's `critique`/`hot_take` confusion,
+which points the diagnosis more toward the data and the training. It doesn't
+rule it out, though. The staff rules turn on explicit, checkable facts (a
+number, a date). My own `critique` rule turns on whether a review "says what
+that thing is like or why", which is a softer test. Also, 180 of my 200 labels
+were AI pre-labels that I checked rather than labelled cold. Getting 30 of 30
+here is not proof that those 200 are as consistent.
 
 ---
 
