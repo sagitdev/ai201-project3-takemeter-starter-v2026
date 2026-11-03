@@ -323,9 +323,14 @@ unit 5.
 - **Translation:** the AI made a Chinese–English side-by-side copy of the
   reviews for improving my own reading efficiency. It isn't part of the data. 
   I didn't use it for the cold 20. I did read it beside the English when checking the other 180.
-- **Baseline prediction (unit 6, Milestone 1):** the AI drafted three
-  candidate predictions from my unit 5 results, each with a Chinese
-  explanation. I read them, agreed with all three, and kept them as written.
+- **Baseline analysis (unit 6, Milestone 1):** the AI ran the baseline
+  with and without my definitions, then drafted "What the gap actually
+  means" from the results. I checked it against the numbers and kept it.
+- **Three-seed run (unit 6, Milestone 2):** I ran notebook sections 1–7
+  myself. The AI read the per-seed confusion matrices from
+  `results_three_seeds_before.json`, filled in the run log numbers (I left
+  the Verdict column for Milestone 4), and drafted the biggest-confusion
+  paragraph. I checked it against the matrices and kept it.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
@@ -414,27 +419,78 @@ My definitions were worth 0.20 accuracy on their own (0.233 with bare names, 0.4
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.65 | 0.567 | 0.833 | 0.500 |  |
+| 2. Per-label F1 | `critique` ≥ 0.60, `hot_take` ≥ 0.60, `experience` ≥ 0.40 | c 0.645 · h 0.519 · e 0.000 | c 0.897 · h 0.828 · e 0.000 | c 0.133 · h 0.651 · e 0.000 |  |
+| 3. Confidence (most-sure third minus least-sure third) | ≥ +0.20 | 0.500 − 0.600 = −0.10 | 1.000 − 0.700 = +0.30 | 0.600 − 0.300 = +0.30 |  |
+| 4. Balance (`labels.csv`) | biggest label ≤ 55%, `experience` ≥ 30 rows | 47.5% · 11 rows | 47.5% · 11 rows | 47.5% · 11 rows |  |
+| 5. Agreement with the staff set | ≥ 0.75 (23 of 30) | pending Milestone 3 | — | — |  |
+
+Criterion 4 is about the labelled file, not a split, so it is the same on every
+seed. Criterion 5 is one comparison against the staff set, not a per-seed
+number.
+
+All three seeds ran on `mps` (Apple Silicon GPU), with the unit 5 settings:
+`distilbert-base-uncased`, 3 epochs, learning rate 2e-5, batch 16,
+`MAX_LENGTH` 256 (`results_three_seeds_before.json`).
+
+**Spread across seeds** (notebook section 6):
+
+| Measure | Seed 42 | Seed 7 | Seed 2024 | Spread |
+|---|---|---|---|---|
+| Overall accuracy | 0.567 | 0.833 | 0.500 | 0.333 |
+| Macro F1 | 0.388 | 0.575 | 0.261 | 0.313 |
+| F1 — `critique` | 0.645 | 0.897 | 0.133 | 0.763 |
+| F1 — `hot_take` | 0.519 | 0.828 | 0.651 | 0.309 |
+| F1 — `experience` | 0.000 | 0.000 | 0.000 | 0.000 |
+
+Accuracy moved 0.333 across three seeds, more than three times the 10-point
+line for a stable measure. With 30 test reviews, one seed's score depends
+heavily on which reviews landed in the test split.
 
 ### Confusion matrix
 
 <!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
      An image of a matrix earns nothing. -->
 
-| true \ predicted |  |  |  |
+Seed 42 (notebook section 7):
+
+| true \ predicted | critique | hot_take | experience |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **critique** | 10 | 4 | 0 |
+| **hot_take** | 7 | 7 | 0 |
+| **experience** | 0 | 2 | 0 |
+
+Seed 7, from `results_three_seeds_before.json`:
+
+| true \ predicted | critique | hot_take | experience |
+|---|---|---|---|
+| **critique** | 13 | 1 | 0 |
+| **hot_take** | 2 | 12 | 0 |
+| **experience** | 0 | 2 | 0 |
+
+Seed 2024, from `results_three_seeds_before.json`:
+
+| true \ predicted | critique | hot_take | experience |
+|---|---|---|---|
+| **critique** | 1 | 13 | 0 |
+| **hot_take** | 0 | 14 | 0 |
+| **experience** | 0 | 2 | 0 |
 
 **My biggest off-diagonal number, and what it means:**
 <!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
      direction. "7 real analysis posts were called hot_take and only 3 went the
      other way" is a direction, not just an error rate. -->
+
+On seed 42, 7 real `hot_take` reviews were called `critique` and 4 went the
+other way. Taken alone, that looks like a boundary the model finds hard in
+both directions. Across all three seeds, though, the biggest off-diagonal
+number is seed 2024's 13: 13 of 14 real `critique` reviews were called
+`hot_take`, and on that split the model predicted `hot_take` for 29 of 30
+reviews. So the model's main error is not a steady lean in one direction. It
+sits close to 50/50 between `critique` and `hot_take`, and whichever split it
+gets tips it one way or the other. The one direction that holds on every seed
+is `experience`: all 2 `experience` reviews went to `hot_take` on all three
+seeds, and the model never predicted `experience` once.
 ---
 
 ## Verdicts and Diagnoses
