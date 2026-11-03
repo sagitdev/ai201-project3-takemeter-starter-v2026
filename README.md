@@ -337,6 +337,9 @@ unit 5.
   notebook myself. The AI read `results_three_seeds_after.json` and the
   training logs and drafted the after run log, the side-by-side table and
   "Did it help".
+- **What's Still Broken (unit 6, Milestone 6):** the AI drafted the section
+  and the two-sentence gap from the after-run confusion matrices. I read it
+  against the run logs.
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
@@ -774,9 +777,54 @@ still misses.
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
+After 10 epochs, criteria 1–4 are still missed.
+
+**1. Overall accuracy (0.567 / 0.933 / 0.700).** Seed 42 is the problem. Its
+validation accuracy reached 0.90, but its test accuracy stayed at 0.567, so
+those 30 test reviews look harder than the other two splits. *What I'd do:*
+read the 13 reviews seed 42 still gets wrong and check whether they share
+something, such as a short review or a named thing with only an evaluation
+word next to it. Then make the test split bigger than 30 by labelling more
+reviews, so one split can't move accuracy by a third. *Why I stopped:* this
+unit allows one change, and I used it on training. Labelling more reviews is
+a change to my data.
+
+**2. Per-label F1 (`experience` 0.000 on all six runs).** Training longer
+fixed the `critique` collapse on seed 2024, but `experience` hasn't been
+predicted once in six runs. *What I'd do:* collect at least 30 more
+`experience` reviews by searching for the reactions in my definition (walking
+out, falling asleep, crying). I'd label them under the same rules, then
+retrain on the same seeds. *Why I stopped:* one improvement per unit, and
+more training was the change that fit cause B. `experience` reviews are also
+rare in IMDb: I found 11 in 200.
+
+**3. Confidence (+0.10 / −0.10 / 0.00).** The model is now confident, but it
+is just as confident when it is wrong. On seeds 7 and 2024 it is more
+confident when wrong, because the 2 `experience` reviews it calls `hot_take`
+are among its surest answers. *What I'd do:* fix `experience` first (see 2),
+since those are the confident mistakes on every seed. Then measure on a
+bigger test split, because thirds of 10 reviews move in steps of 0.10.
+*Why I stopped:* same reason as 2; it depends on the same missing data.
+
+**4. Balance (`experience` 11 rows, target 30).** This is about `labels.csv`,
+so no training change could touch it. *What I'd do:* the same new
+`experience` reviews as in 2. That would also lift `experience` from 5.5% to
+about 18% of the data, still well under the 55% cap. *Why I stopped:* this
+unit says the labels stay where they were.
+
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
+
+I meant `critique` vs `hot_take` to depend on whether a review says what a
+specific thing in the film is like or why, and the model learned that only
+partly: seed 7 got it perfect after 10 epochs, but on seed 42, 6 `hot_take`
+reviews still went to `critique` and 5 `critique` reviews went the other
+way. I meant `experience` to capture a reaction the film caused, but in all
+six confusion matrices every `experience` review went to `hot_take`, so the
+model seems to have learned only the half my two labels share ("nothing
+specific") and not the half that separates them (a reaction rather than a
+verdict).
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
