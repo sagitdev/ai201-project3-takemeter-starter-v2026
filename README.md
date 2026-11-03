@@ -332,6 +332,11 @@ unit 5.
   and converted the staff labels from `.xlsx` to `data/staff_labels.csv`
   without reading them. After `agreement.py` reported 30/30, it compared my
   rule notes with the staff `why` column and drafted the Agreement Report.
+- **The improvement (unit 6, Milestone 5):** the AI compared the two options
+  my diagnosis pointed at and recommended more epochs. I chose 10 and ran the
+  notebook myself. The AI read `results_three_seeds_after.json` and the
+  training logs and drafted the after run log, the side-by-side table and
+  "Did it help".
 
 **Pre-labelling disclosure:** The 20 rows marked `cold` in the `note` column
 were labelled by me alone, with no AI. The other 180 were pre-labelled by AI
@@ -678,18 +683,90 @@ validation accuracy falling in the later epochs.
 
 ### Run Log — After
 
+10 epochs, everything else as before (`results_three_seeds_after.json`, `mps`).
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.65 | 0.567 | 0.933 | 0.700 | MISSED |
+| 2. Per-label F1 | `critique` ≥ 0.60, `hot_take` ≥ 0.60, `experience` ≥ 0.40 | c 0.621 · h 0.552 · e 0.000 | c 1.000 · h 0.933 · e 0.000 | c 0.696 · h 0.743 · e 0.000 | MISSED |
+| 3. Confidence (most-sure third minus least-sure third) | ≥ +0.20 | 0.700 − 0.600 = +0.10 | 0.900 − 1.000 = −0.10 | 0.800 − 0.800 = 0.00 | MISSED |
+| 4. Balance (`labels.csv`) | biggest label ≤ 55%, `experience` ≥ 30 rows | 47.5% · 11 rows | 47.5% · 11 rows | 47.5% · 11 rows | MISSED |
+| 5. Agreement with the staff set | ≥ 0.75 (23 of 30) | 30 / 30 | — | — | MET |
+
+Criteria 4 and 5 don't depend on training, so they can't move with this
+change.
+
+**Before and after, side by side:**
+
+| Measure | Before (3 epochs) | After (10 epochs) |
+|---|---|---|
+| Accuracy, seeds 42 / 7 / 2024 | 0.567 / 0.833 / 0.500 | 0.567 / 0.933 / 0.700 |
+| Accuracy, mean of three | 0.633 | 0.733 |
+| Accuracy spread | 0.333 | 0.367 |
+| Macro F1, mean of three | 0.408 | 0.505 |
+| `critique` F1, seeds 42 / 7 / 2024 | 0.645 / 0.897 / 0.133 | 0.621 / 1.000 / 0.696 |
+| `hot_take` F1, seeds 42 / 7 / 2024 | 0.519 / 0.828 / 0.651 | 0.552 / 0.933 / 0.743 |
+| `experience` F1, all seeds | 0.000 | 0.000 |
+| Final eval loss, seeds 42 / 7 / 2024 | about 0.87–0.89 | 0.49 / 0.73 / 0.66 |
+| Mean confidence when right / wrong, seed 42 | 0.467 / 0.468 | 0.758 / 0.727 |
+
+Confusion matrices after the change:
+
+Seed 42:
+
+| true \ predicted | critique | hot_take | experience |
+|---|---|---|---|
+| **critique** | 9 | 5 | 0 |
+| **hot_take** | 6 | 8 | 0 |
+| **experience** | 0 | 2 | 0 |
+
+Seed 7:
+
+| true \ predicted | critique | hot_take | experience |
+|---|---|---|---|
+| **critique** | 14 | 0 | 0 |
+| **hot_take** | 0 | 14 | 0 |
+| **experience** | 0 | 2 | 0 |
+
+Seed 2024:
+
+| true \ predicted | critique | hot_take | experience |
+|---|---|---|---|
+| **critique** | 8 | 6 | 0 |
+| **hot_take** | 1 | 13 | 0 |
+| **experience** | 0 | 2 | 0 |
 
 **Did it help, and how do I know:**
 
 <!-- If it didn't, say so. Relabelling that didn't help is a genuinely
      interesting result and earns full credit. -->
+
+It helped the model, but it didn't flip a single verdict. All four misses are
+still misses.
+
+- **The model learned more.** Final eval loss fell from about 0.87 to 0.49–0.73
+  on every seed, well below the 0.87 of a model that only knows the label
+  proportions. That part of my prediction was right, so under-training was a
+  real cause. Validation accuracy kept rising into the last epochs (seed 42:
+  0.71 at epoch 3, 0.90 at epoch 10), so I see no sign of overfitting.
+- **The collapse went away.** On seed 2024, `critique` F1 went from 0.133 to
+  0.696. The model no longer calls almost everything `hot_take` (13 of 14
+  `critique` reviews were called `hot_take` before; 6 of 14 after). Mean
+  accuracy rose from 0.633 to 0.733, and mean macro F1 from 0.408 to 0.505.
+- **But it didn't get steadier, which I predicted it would.** The spread grew
+  from 0.333 to 0.367. Seed 42 stayed at exactly 0.567. On that seed,
+  validation accuracy reached 0.90 but test accuracy stayed at 0.567. So the
+  seed-42 test split looks genuinely harder than the other two, and on 30
+  reviews one split can swing the score this much. More training can't fix a
+  test set that small.
+- **Criterion 3 got no better.** The model is now confident (about 0.7–0.78
+  instead of 0.47), but on seeds 7 and 2024 it was *more* confident when
+  wrong than when right. Every seed's wrong answers include the 2 `experience`
+  reviews, which it now calls `hot_take` with confidence. More training made
+  the model surer, not better calibrated.
+- **`experience` stayed at 0, as I expected.** About 8 training examples isn't
+  enough, however many epochs. That is cause A, and it needs more data, not
+  more training.
 
 ---
 
